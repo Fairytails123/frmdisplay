@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feeding Report - TV Display</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-pen: #0f3460;
+            --fairy-tails-blue: #00acee;
+            --accent-secondary: #f39c12;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --status-all: #2ecc71;
+            --status-three-quarter: #9acd32;
+            --status-half: #f1c40f;
+            --status-quarter: #e67e22;
+            --status-none: #e74c3c;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            color: var(--text-primary);
+        }
+
+        .tv-container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--bg-pen);
+            flex-shrink: 0;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            object-fit: cover;
+        }
+
+        .title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--fairy-tails-blue);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .header-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        .meal-display {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--accent-secondary);
+            background: var(--bg-pen);
+            padding: 8px 20px;
+            border-radius: 8px;
+        }
+
+        .status-display {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .refresh-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .refresh-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--status-all);
+            animation: pulse 2s infinite;
+        }
+
+        .refresh-dot.syncing {
+            background: var(--fairy-tails-blue);
+            animation: pulse 0.5s infinite;
+        }
+
+        .refresh-dot.error {
+            background: var(--status-none);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.2); }
+        }
+
+        /* Pens Grid */
+        .pens-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding-top: 15px;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .pen-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .pen-section-label {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--accent-secondary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            flex-shrink: 0;
+        }
+
+        .pen-row {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            min-height: 0;
+        }
+
+        .pen {
+            background: var(--bg-pen);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .pen-header {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-align: center;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 8px;
+            flex-shrink: 0;
+        }
+
+        .pen-dogs {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            overflow: hidden;
+        }
+
+        .pen-empty {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-style: italic;
+            opacity: 0.5;
+        }
+
+        /* Dog Cards */
+        .dog-card {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 8px 10px;
+            border-left: 4px solid var(--status-all);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .dog-card.status-all { border-left-color: var(--status-all); }
+        .dog-card.status-three-quarter { border-left-color: var(--status-three-quarter); }
+        .dog-card.status-half { border-left-color: var(--status-half); }
+        .dog-card.status-quarter { border-left-color: var(--status-quarter); }
+        .dog-card.status-none { border-left-color: var(--status-none); }
+
+        .dog-name {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+        }
+
+        .dog-indicators {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .indicator {
+            font-size: 0.6rem;
+            font-weight: 700;
+            padding: 2px 5px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .indicator-p {
+            background: var(--fairy-tails-blue);
+            color: white;
+        }
+
+        .indicator-s {
+            background: var(--accent-secondary);
+            color: white;
+        }
+
+        .dog-status {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+
+        /* Footer Stats */
+        .footer {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            padding-top: 15px;
+            border-top: 2px solid var(--bg-pen);
+            flex-shrink: 0;
+            margin-top: 10px;
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+        }
+
+        .stat-value {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--fairy-tails-blue);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+        }
+
+        /* Dynamic Scaling Based on Dog Count */
+        .scale-xl .dog-card { padding: 12px 15px; }
+        .scale-xl .dog-name { font-size: 1.1rem; }
+        .scale-xl .indicator { font-size: 0.7rem; padding: 3px 6px; }
+        .scale-xl .dog-status { font-size: 0.85rem; }
+        .scale-xl .pen-dogs { gap: 10px; }
+
+        .scale-lg .dog-card { padding: 10px 12px; }
+        .scale-lg .dog-name { font-size: 0.95rem; }
+        .scale-lg .indicator { font-size: 0.65rem; }
+        .scale-lg .dog-status { font-size: 0.8rem; }
+        .scale-lg .pen-dogs { gap: 8px; }
+
+        .scale-md .dog-card { padding: 8px 10px; }
+        .scale-md .dog-name { font-size: 0.85rem; }
+        .scale-md .indicator { font-size: 0.6rem; }
+        .scale-md .dog-status { font-size: 0.7rem; }
+        .scale-md .pen-dogs { gap: 6px; }
+
+        .scale-sm .dog-card { padding: 6px 8px; }
+        .scale-sm .dog-name { font-size: 0.75rem; }
+        .scale-sm .indicator { font-size: 0.55rem; padding: 1px 4px; }
+        .scale-sm .dog-status { font-size: 0.65rem; }
+        .scale-sm .pen-dogs { gap: 4px; }
+
+        .scale-xs .dog-card { padding: 4px 6px; }
+        .scale-xs .dog-name { font-size: 0.65rem; }
+        .scale-xs .indicator { font-size: 0.5rem; padding: 1px 3px; }
+        .scale-xs .dog-status { font-size: 0.55rem; }
+        .scale-xs .pen-dogs { gap: 3px; }
+
+        /* Loading State */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            z-index: 1000;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-logo {
+            width: 120px;
+            height: 120px;
+            border-radius: 20px;
+            animation: pulse 1.5s infinite;
+        }
+
+        .loading-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--fairy-tails-blue);
+        }
+
+        /* No Dogs Message */
+        .no-dogs-message {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            color: var(--text-secondary);
+        }
+
+        .no-dogs-message .icon {
+            font-size: 4rem;
+        }
+
+        .no-dogs-message .text {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <img src="https://i.ibb.co/whdBKp0L/Logo-1.jpg" alt="Fairy Tails" class="loading-logo">
+        <div class="loading-text">Loading Feeding Report...</div>
+    </div>
+
+    <div class="tv-container" id="tvContainer">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <img src="https://i.ibb.co/whdBKp0L/Logo-1.jpg" alt="Fairy Tails" class="logo">
+                <div class="title">🍽️ Feeding Report</div>
+            </div>
+            <div class="header-right">
+                <div class="meal-display" id="mealDisplay">Loading...</div>
+                <div class="status-display">
+                    <div class="refresh-indicator">
+                        <div class="refresh-dot" id="refreshDot"></div>
+                        <span id="statusText">Connecting...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pens Container -->
+        <div class="pens-container" id="pensContainer">
+            <!-- Will be populated by JavaScript -->
+        </div>
+
+        <!-- Footer Stats -->
+        <div class="footer">
+            <div class="stat">
+                <span class="stat-value" id="totalDogs">0</span>
+                <span class="stat-label">Dogs Today</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value" id="pensUsed">0</span>
+                <span class="stat-label">Pens Used</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value" id="lastUpdate">--:--</span>
+                <span class="stat-label">Last Update</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURATION
+        // ============================================
+        
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwP74AXOe1cZmHKTxi9KbMhZJU48EHRFI7NQ6Og65_FcTVB1sMQuqgkPKIkr7Fm7e40mw/exec';
+        const REFRESH_INTERVAL = 10000; // 10 seconds
+        
+        const STATUS_LABELS = {
+            'all': 'All',
+            'three-quarter': '¾',
+            'half': '½',
+            'quarter': '¼',
+            'none': 'None'
+        };
+
+        // ============================================
+        // STATE
+        // ============================================
+        
+        let dogs = [];
+        let pens = {
+            'top-1': [], 'top-2': [], 'top-3': [], 'top-4': [], 'top-5': [],
+            'bottom-1': [], 'bottom-2': [], 'bottom-3': [], 'bottom-4': [], 'bottom-5': []
+        };
+        let currentMealType = 'Loading...';
+        let refreshTimer = null;
+        let isFirstLoad = true;
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderPensStructure();
+            loadData();
+            startAutoRefresh();
+        });
+
+        function renderPensStructure() {
+            const container = document.getElementById('pensContainer');
+            container.innerHTML = `
+                <div class="pen-section">
+                    <div class="pen-section-label">Top Pens</div>
+                    <div class="pen-row" id="topPensRow">
+                        ${[1,2,3,4,5].map(i => `
+                            <div class="pen" id="pen-top-${i}">
+                                <div class="pen-header">Top ${i}</div>
+                                <div class="pen-dogs" id="dogs-top-${i}"></div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                <div class="pen-section">
+                    <div class="pen-section-label">Bottom Pens</div>
+                    <div class="pen-row" id="bottomPensRow">
+                        ${[1,2,3,4,5].map(i => `
+                            <div class="pen" id="pen-bottom-${i}">
+                                <div class="pen-header">Bottom ${i}</div>
+                                <div class="pen-dogs" id="dogs-bottom-${i}"></div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // ============================================
+        // DATA LOADING
+        // ============================================
+
+        async function loadData() {
+            setRefreshStatus('syncing');
+            
+            try {
+                const response = await fetch(APPS_SCRIPT_URL + '?action=getSession', {
+                    method: 'GET',
+                    redirect: 'follow'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    applyData(result);
+                    setRefreshStatus('connected');
+                    
+                    if (isFirstLoad) {
+                        hideLoadingOverlay();
+                        isFirstLoad = false;
+                    }
+                } else {
+                    setRefreshStatus('error', 'Data error');
+                }
+            } catch (error) {
+                console.error('Load error:', error);
+                setRefreshStatus('error', 'Connection error');
+            }
+        }
+
+        function applyData(result) {
+            // Update meal type
+            currentMealType = result.mealType || 'Lunch';
+            document.getElementById('mealDisplay').textContent = '🕐 ' + currentMealType;
+            
+            // Update dogs array
+            dogs = result.dogs || [];
+            
+            // Reset pens
+            for (const penId of Object.keys(pens)) {
+                pens[penId] = [];
+            }
+            
+            // Populate pens
+            dogs.forEach(dog => {
+                if (dog.penId && pens[dog.penId]) {
+                    pens[dog.penId].push(dog);
+                }
+            });
+            
+            // Render all pens
+            renderAllPens();
+            
+            // Update stats
+            updateStats();
+            
+            // Calculate scale
+            calculateScale();
+        }
+
+        function renderAllPens() {
+            for (const penId of Object.keys(pens)) {
+                renderPen(penId);
+            }
+        }
+
+        function renderPen(penId) {
+            const container = document.getElementById(`dogs-${penId}`);
+            const penDogs = pens[penId];
+            
+            if (penDogs.length === 0) {
+                container.innerHTML = '<div class="pen-empty">Empty</div>';
+                return;
+            }
+            
+            container.innerHTML = penDogs.map(dog => {
+                const displayName = dog.matchedName || dog.inputName || 'Unknown';
+                const statusLabel = STATUS_LABELS[dog.status] || dog.status;
+                
+                let indicators = '';
+                if (dog.prescription) {
+                    indicators += '<span class="indicator indicator-p">+P</span>';
+                }
+                if (dog.supplements) {
+                    indicators += '<span class="indicator indicator-s">+S</span>';
+                }
+                
+                return `
+                    <div class="dog-card status-${dog.status || 'all'}">
+                        <span class="dog-name">${displayName}</span>
+                        <div class="dog-indicators">${indicators}</div>
+                        <span class="dog-status">${statusLabel}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateStats() {
+            // Count dogs in pens
+            let totalDogs = 0;
+            let pensUsed = 0;
+            
+            for (const penDogs of Object.values(pens)) {
+                totalDogs += penDogs.length;
+                if (penDogs.length > 0) pensUsed++;
+            }
+            
+            document.getElementById('totalDogs').textContent = totalDogs;
+            document.getElementById('pensUsed').textContent = pensUsed;
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('en-GB', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+        }
+
+        // ============================================
+        // DYNAMIC SCALING
+        // ============================================
+
+        function calculateScale() {
+            const container = document.getElementById('tvContainer');
+            
+            // Remove existing scale classes
+            container.classList.remove('scale-xl', 'scale-lg', 'scale-md', 'scale-sm', 'scale-xs');
+            
+            // Find max dogs in any pen
+            let maxDogsInPen = 0;
+            for (const penDogs of Object.values(pens)) {
+                if (penDogs.length > maxDogsInPen) {
+                    maxDogsInPen = penDogs.length;
+                }
+            }
+            
+            // Choose scale based on max dogs per pen
+            let scaleClass;
+            if (maxDogsInPen <= 2) {
+                scaleClass = 'scale-xl';
+            } else if (maxDogsInPen <= 3) {
+                scaleClass = 'scale-lg';
+            } else if (maxDogsInPen <= 4) {
+                scaleClass = 'scale-md';
+            } else if (maxDogsInPen <= 6) {
+                scaleClass = 'scale-sm';
+            } else {
+                scaleClass = 'scale-xs';
+            }
+            
+            container.classList.add(scaleClass);
+        }
+
+        // ============================================
+        // AUTO REFRESH
+        // ============================================
+
+        function startAutoRefresh() {
+            if (refreshTimer) clearInterval(refreshTimer);
+            
+            refreshTimer = setInterval(() => {
+                loadData();
+            }, REFRESH_INTERVAL);
+        }
+
+        function setRefreshStatus(status, message = null) {
+            const dot = document.getElementById('refreshDot');
+            const text = document.getElementById('statusText');
+            
+            dot.className = 'refresh-dot';
+            
+            switch (status) {
+                case 'syncing':
+                    dot.classList.add('syncing');
+                    text.textContent = 'Refreshing...';
+                    break;
+                case 'connected':
+                    text.textContent = 'Live • Auto-refresh 10s';
+                    break;
+                case 'error':
+                    dot.classList.add('error');
+                    text.textContent = message || 'Error';
+                    break;
+            }
+        }
+
+        function hideLoadingOverlay() {
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.classList.add('hidden');
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 500);
+        }
+    </script>
+</body>
+</html>
