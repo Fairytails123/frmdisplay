@@ -616,7 +616,14 @@
                     pens[dog.penId].push(dog);
                 }
             });
-            
+
+            // Order each pen by the within-pen feeding order staff set on the tablet (Session
+            // "Position" column). Stable sort -> legacy/0 ties keep server-row order, so the
+            // display matches the tablet exactly (same logic as the tablet's applyRemoteState).
+            for (const penId of Object.keys(pens)) {
+                pens[penId].sort((a, b) => (a.position || 0) - (b.position || 0));
+            }
+
             // Render all pens
             renderAllPens();
             
